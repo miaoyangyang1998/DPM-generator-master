@@ -105,6 +105,6 @@ public class InjExport {
                 fis.close();
             }
         }
-        return true;
+        return flag;
     }
 }
