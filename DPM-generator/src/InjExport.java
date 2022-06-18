@@ -25,6 +25,7 @@ public class InjExport {
             // 改 5.00E-05 和 injection0 这两项
             // 5.00E-05 是夹杂物粒径， injection0 是夹杂物的名称
             // 更改粒径，夹杂物名称也要改，并且之前生成的文件要改名字，不然会覆盖原来的文件
+            // 重复的数据不用管，否则2020R2不识别
             isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " 1.00E-10 1.00E-10 2.00E-10 273.00E+00 5.00E-05 273.00E+00 1.00E-20 ) injection0:" + i + " )");
         }
         if (isWrite) {
