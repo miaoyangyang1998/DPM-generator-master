@@ -12,23 +12,88 @@ public class InjExport {
     private static String filenameTemp;
 
     public static void main(String[] args) throws IOException {
-        boolean isCreate = InjExport.creatTxtFile("inclusions");
+        double v = 0.0003408;
+        double t = 2400;
+        double l0 = 0.01;
+        boolean isCreate = InjExport.creatTxtFile("inclusions_" + t);
         if (isCreate) {
             System.out.println("文件创建成功");
         } else {
             System.out.println("文件已存在");
         }
         boolean isWrite = false;
-        for (int i = 0; i < 1000; i++) {
-            double x = Math.random() * 0.14;
-            double y = Math.random() * 0.83;
-            // 改 5.00E-05 和 injection0 这两项
-            // 5.00E-05 是夹杂物粒径， injection0 是夹杂物的名称
-            // 更改粒径，夹杂物名称也要改，并且之前生成的文件要改名字，不然会覆盖原来的文件
-            // 重复的数据不用管，否则2020R2不识别
+
+        for (int i = 1; i <= 100; i++) {
+            double x = Math.random() * l0 + v * t;
+            double y = Math.random() * 0.14;
+            double z = 0.0;
+            double diameter = 1.0e-6;
+            double temperature = 1803.0;
+            double massFlow = 1.0e-20;
             // 删除原inj文件再生成，否则会添加到之前inj文件的末尾
-            isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " 1.00E-10 1.00E-10 2.00E-10 273.00E+00 5.00E-05 273.00E+00 1.00E-20 ) injection0:" + i + " )");
+            isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection1_:" + i + " )");
         }
+
+        for (int i = 1; i <= 800; i++) {
+            double x = Math.random() * l0 + v * t;
+            double y = Math.random() * 0.14;
+            double z = 0.0;
+            double diameter = 2.0e-6;
+            double temperature = 1803.0;
+            double massFlow = 1.0e-20;
+            isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection2_:" + i + " )");
+        }
+
+        for (int i = 1; i <= 200; i++) {
+            double x = Math.random() * l0 + v * t;
+            double y = Math.random() * 0.14;
+            double z = 0.0;
+            double diameter = 3.0e-6;
+            double temperature = 1803.0;
+            double massFlow = 1.0e-20;
+            isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection3_:" + i + " )");
+        }
+
+        for (int i = 1; i <= 50; i++) {
+            double x = Math.random() * l0 + v * t;
+            double y = Math.random() * 0.14;
+            double z = 0.0;
+            double diameter = 4.0e-6;
+            double temperature = 1803.0;
+            double massFlow = 1.0e-20;
+            isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection4_:" + i + " )");
+        }
+
+        for (int i = 1; i <= 30; i++) {
+            double x = Math.random() * l0 + v * t;
+            double y = Math.random() * 0.14;
+            double z = 0.0;
+            double diameter = 5.0e-6;
+            double temperature = 1803.0;
+            double massFlow = 1.0e-20;
+            isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection5_:" + i + " )");
+        }
+
+        for (int i = 1; i <= 20; i++) {
+            double x = Math.random() * l0 + v * t;
+            double y = Math.random() * 0.14;
+            double z = 0.0;
+            double diameter = 6.0e-6;
+            double temperature = 1803.0;
+            double massFlow = 1.0e-20;
+            isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection6_:" + i + " )");
+        }
+
+        for (int i = 1; i <= 10; i++) {
+            double x = Math.random() * l0 + v * t;
+            double y = Math.random() * 0.14;
+            double z = 0.0;
+            double diameter = 7.0e-6;
+            double temperature = 1803.0;
+            double massFlow = 1.0e-20;
+            isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection7_:" + i + " )");
+        }
+
         if (isWrite) {
             System.out.println("文件写入成功");
         } else {
