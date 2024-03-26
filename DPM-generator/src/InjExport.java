@@ -1,196 +1,105 @@
-import java.io.*;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @program: ByteDance
- * @author: MiaoYangYang
- * @email: miaoyang@mail.ustc.edu.cn
- * @create: 2022-06-11 22:32
- **/
+ * ANSYS Fluent 2020 R2 VAR-2D Model
+ * Java NIO 多核并行写入文件
+ *
+ * @author YangyangMiao
+ * @email yangyangmiao666@outlook.com
+ * @since 2024/3/27 2:22
+ * @version 2.0
+ */
+
 public class InjExport {
 
     // 输出inj文件的目录，这个可以改成你想要的
     private static final String PATH = "D:/";
-    // 文件名，不需要修改，我已经写好了
-    private static String filenameTemp;
+    // 动网格速度，铸锭生长速度 单位 m/s
+    public static final double V = 0.0003408;
+    // 铸锭动网格生长时间，从100s开始 单位 s
+    private static final int T0 = 100;
+    // 铸锭动网格生长时间，总共2400s 单位 s
+    private static final int T_TOTAL = 2400;
+    // 每多少秒投放一次夹杂物 单位 s
+    private static final int INTERVAL = 100;
+    // 初始网格长度 单位 m
+    private static final double LENGTH_MESH_INIT = 0.01;
+    // 铸锭半径 单位 m
+    private static final double R_INGOT = 0.14;
+    // 夹杂物尺寸 单位 m
+    private static final double[] DIAMETERS = {1.0e-6, 2.0e-6, 3.0e-6, 4.0e-6, 5.0e-6, 6.0e-6, 7.0e-6};
+    // 夹杂物数量（和上面尺寸按顺序一一对应） 单位 个
+    private static final int[] NUMBERS = {200000, 200000, 300000, 200000, 150000, 200000, 50000};
+    // 夹杂物温度 单位 k
+    private static final double TEMPERATURE = 1803.0;
+    // 夹杂物质量流率，给1.0e-20很小的值就行了 单位 kg/s
+    private static final double MASS_FLOW = 1.0e-20;
 
     // 这是主函数，运行这个就可以了
-    public static void main(String[] args) throws IOException {
-        // 动网格速度，铸锭生长速度
-        double v = 0.0003408;
-        // 铸锭动网格生长时间，从100s开始
-        int t0 = 100;
-        // 铸锭动网格生长时间，总共2400s
-        int tTotal = 2400;
-        // 初始网格长度m
-        double length0 = 0.01;
-
-        // 开始创建文件
-        for (int t = t0; t <= tTotal; t += 100) {
-            // 创建文件，文件名inclusions_加时间
-            boolean isCreate = InjExport.creatTxtFile("inclusions_" + t);
-            if (isCreate) {
-                System.out.println("文件创建成功");
-            } else {
-                System.out.println("文件已存在");
-            }
-            boolean isWrite = false;
-
-            // 1μm夹杂物投放100个
-            for (int i = 1; i <= 100; i++) {
-                // 夹杂物随机x位置(轴向)
-                double x = Math.random() * length0 + v * t;
-                // 夹杂物随机y位置(径向)，0.14是铸锭半径
-                double y = Math.random() * 0.14;
-                // 夹杂物随机z位置，如果是三维的话，二维给0就行了
-                double z = 0.0;
-                // 夹杂物粒径
-                double diameter = 1.0e-6;
-                // 夹杂物温度
-                double temperature = 1803.0;
-                // 夹杂物流率，给1.0e-20很小的值就行了
-                double massFlow = 1.0e-20;
-                // 删除原inj文件再生成，否则会添加到之前inj文件的末尾
-                isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection1_:" + i + " )");
-            }
-
-            // 2μm夹杂物投放800个
-            for (int i = 1; i <= 800; i++) {
-                double x = Math.random() * length0 + v * t;
-                double y = Math.random() * 0.14;
-                double z = 0.0;
-                double diameter = 2.0e-6;
-                double temperature = 1803.0;
-                double massFlow = 1.0e-20;
-                isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection2_:" + i + " )");
-            }
-
-            for (int i = 1; i <= 200; i++) {
-                double x = Math.random() * length0 + v * t;
-                double y = Math.random() * 0.14;
-                double z = 0.0;
-                double diameter = 3.0e-6;
-                double temperature = 1803.0;
-                double massFlow = 1.0e-20;
-                isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection3_:" + i + " )");
-            }
-
-            for (int i = 1; i <= 50; i++) {
-                double x = Math.random() * length0 + v * t;
-                double y = Math.random() * 0.14;
-                double z = 0.0;
-                double diameter = 4.0e-6;
-                double temperature = 1803.0;
-                double massFlow = 1.0e-20;
-                isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection4_:" + i + " )");
-            }
-
-            for (int i = 1; i <= 30; i++) {
-                double x = Math.random() * length0 + v * t;
-                double y = Math.random() * 0.14;
-                double z = 0.0;
-                double diameter = 5.0e-6;
-                double temperature = 1803.0;
-                double massFlow = 1.0e-20;
-                isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection5_:" + i + " )");
-            }
-
-            for (int i = 1; i <= 20; i++) {
-                double x = Math.random() * length0 + v * t;
-                double y = Math.random() * 0.14;
-                double z = 0.0;
-                double diameter = 6.0e-6;
-                double temperature = 1803.0;
-                double massFlow = 1.0e-20;
-                isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection6_:" + i + " )");
-            }
-
-            for (int i = 1; i <= 10; i++) {
-                double x = Math.random() * length0 + v * t;
-                double y = Math.random() * 0.14;
-                double z = 0.0;
-                double diameter = 7.0e-6;
-                double temperature = 1803.0;
-                double massFlow = 1.0e-20;
-                isWrite = InjExport.writeTxtFile("( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameter + " " + temperature + " " + massFlow + " ) injection7_:" + i + " )");
-            }
-
-            if (isWrite) {
-                System.out.println("文件写入成功");
-            } else {
-                System.out.println("文件写入失败");
-            }
+    public static void main(String[] args) {
+        if (DIAMETERS.length != NUMBERS.length) {
+            throw new RuntimeException("夹杂物尺寸和夹杂物数量必须一一对应!");
         }
+        int segment = ((T_TOTAL - T0) / INTERVAL) + 1;
+        System.out.println("NIO内存映射-开始" + segment + "核并行写入离散相file类型注入文件...");
+        long startTime = System.currentTimeMillis();
+        try (ThreadPoolExecutor executor = new ThreadPoolExecutor(segment, segment, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>())) {
+            CountDownLatch latch = new CountDownLatch(segment);
+            for (int t = T0; t <= T_TOTAL; t += INTERVAL) {
+                AtomicInteger currentTime = new AtomicInteger(t);
+                executor.execute(() -> {
+                    writeInjFiles(PATH, "inclusions_" + currentTime.get(), currentTime, NUMBERS, DIAMETERS);
+                    latch.countDown();
+                });
+            }
+            latch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        long endTime = System.currentTimeMillis();
+        int sum = 0;
+        for (int num : NUMBERS) {
+            sum += num;
+        }
+        System.out.println("NIO内存映射-" + segment + "核并行写入离散相file类型注入文件成功！总共写入" + sum + "条数据，耗时：" + (endTime - startTime) + "毫秒！");
     }
 
-    /**
-     * 创建文件
-     */
-    public static boolean creatTxtFile(String name) throws IOException {
-        boolean flag = false;
-        filenameTemp = PATH + name + ".inj";
-        File filename = new File(filenameTemp);
-        if (!filename.exists()) {
-            flag = filename.createNewFile();
+
+    public static void writeInjFiles(String path, String fileName, AtomicInteger t, int[] numbers, double[] diameters) {
+        try (RandomAccessFile randomAccessFile = new RandomAccessFile(path + fileName, "rw")) {
+            FileChannel fileChannel = randomAccessFile.getChannel();
+            int offset = 0;
+            StringBuilder sb = new StringBuilder();
+            AtomicInteger incr = new AtomicInteger(1);
+            for (int i = 0; i < diameters.length; i++) {
+                int index = incr.getAndIncrement();
+                for (int j = 1; j <= numbers[i]; j++) {
+                    // 夹杂物随机x位置(轴向)
+                    double x = Math.random() * LENGTH_MESH_INIT + V * t.get();
+                    // 夹杂物随机y位置(径向)，R_INGOT 是铸锭半径
+                    double y = Math.random() * R_INGOT;
+                    // 夹杂物随机z位置，如果是三维的话，二维给0就行了
+                    double z = 0.0;
+                    // 删除原inj文件再生成，否则会添加到之前inj文件的末尾
+                    String context = "( ( " + x + " " + y + " " + z + " 0.0 0.0 0.0 " + diameters[i] + " " + TEMPERATURE + " " + MASS_FLOW + " ) injection_" + index + ":" + j + " )";
+                    sb.append(context).append("\n");
+                }
+            }
+            byte[] bytes = sb.toString().getBytes();
+            MappedByteBuffer mappedByteBuffer;
+            // 直接内存映射提升 NIO 性能，高效写入
+            mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_WRITE, offset, bytes.length);
+            mappedByteBuffer.put(bytes);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return flag;
-    }
-
-    /**
-     * 写文件
-     * @param newStr 新内容
-     */
-    public static boolean writeTxtFile(String newStr) throws IOException {
-        // 先读取原有文件内容，然后进行写入操作
-        boolean flag;
-        String fileIn = newStr + " ";
-        String temp;
-
-        FileInputStream fis = null;
-        InputStreamReader isr = null;
-        BufferedReader br = null;
-
-        FileOutputStream fos = null;
-        PrintWriter pw = null;
-        try {
-            // 文件路径
-            File file = new File(filenameTemp);
-            // 将文件读入输入流
-            fis = new FileInputStream(file);
-            isr = new InputStreamReader(fis);
-            br = new BufferedReader(isr);
-            StringBuilder buf = new StringBuilder();
-
-            // 保存该文件原有的内容
-            while ((temp = br.readLine()) != null) {
-                buf.append(temp);
-                // System.getProperty("line.separator")
-                // 行与行之间的分隔符 相当于“ ”
-                buf.append(System.getProperty("line.separator"));
-            }
-            buf.append(fileIn);
-
-            fos = new FileOutputStream(file);
-            pw = new PrintWriter(fos);
-            pw.write(buf.toString().toCharArray());
-            pw.flush();
-            flag = true;
-        } finally {
-            if (pw != null) {
-                pw.close();
-            }
-            if (fos != null) {
-                fos.close();
-            }
-            if (br != null) {
-                br.close();
-            }
-            if (isr != null) {
-                isr.close();
-            }
-            if (fis != null) {
-                fis.close();
-            }
-        }
-        return flag;
     }
 }
